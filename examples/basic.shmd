@@ -1,0 +1,20 @@
+# This is a basic SHMD markup file
+
+This will demonstrate how to embed shell scripts into your markup.
+
+To get the current date is ISO format, use $(date --iso-8601), that's it!
+
+If you want a signature at the bottom of your markup, something like
+
+Regards,
+$(whoami) @ $(hostname), $(date)
+
+might be appropriate.
+
+To compile this file to markdown, run the following (from the root of the
+repository)
+
+    ./shmd < examples/basic.shmd > examples/basic.md
+
+Which will process all the SHMD tags in this file, and output the remaining
+markdown file into `examples/basic.md`
