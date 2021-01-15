@@ -22,3 +22,5 @@ markdown file into `examples/basic.md`
 ## $(echo "You can even embed commands in titles...")
 
 'Quotes' shouldn't break "things"... right?
+
+You can also do $(echo 'iping within commands!' | sed 's/iping/piping/')
