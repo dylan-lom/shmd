@@ -56,3 +56,14 @@ char* str_concat(int count, ...)
 
     return new_str;
 }
+
+char* str_trimr(char* s, char c, int max_num)
+{
+    int i = strlen(s)-1;
+    while (s[i] == c && max_num > 0) {
+        s[i] = '\0';
+        i--;
+        max_num--;
+    }
+    return s;
+}

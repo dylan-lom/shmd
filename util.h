@@ -6,3 +6,4 @@ void edie(const char* fmt, ...);
 void usage();
 
 char* str_concat(int count, ...);
+char* str_trimr(char* s, char c, int max_num);
