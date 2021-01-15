@@ -33,13 +33,19 @@ char* execute_command(const char* command) {
     return result;
 }
 
-char* process_shmd() {
-    return NULL;
+char* process_shmd(char* input, ...) {
+    return execute_command(str_concat(3, "echo -n \"", input, "\""));
 }
 
 int main(int argc, char* argv[]) {
     SET_ARGV0();
-    char* result = execute_command("ls -1");
-    printf("%s", result);
+    size_t buf_size = 1000;
+    char* buf = calloc(buf_size, sizeof(char));
+    if (buf == NULL) edie("calloc: ");
+
+    while (fgets(buf, buf_size, stdin) != NULL) {
+        printf("%s", process_shmd(buf));
+    }
+
     return EXIT_SUCCESS;
 }

@@ -18,3 +18,7 @@ repository)
 
 Which will process all the SHMD tags in this file, and output the remaining
 markdown file into `examples/basic.md`
+
+## $(echo "You can even embed commands in titles...")
+
+'Quotes' shouldn't break "things"... right?
