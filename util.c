@@ -1,15 +1,16 @@
-#include "util.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "util.h"
+
 extern const char* argv0;
 
 void die(const char* fmt, ...)
 {
-    fmt = concat(2, fmt, "\n");
+    fmt = str_concat(2, fmt, "\n");
     va_list ap;
 
     va_start(ap, fmt);
@@ -21,7 +22,7 @@ void die(const char* fmt, ...)
 
 void edie(const char* fmt, ...)
 {
-    fmt = concat(2, fmt, strerror(errno));
+    fmt = str_concat(2, fmt, strerror(errno));
     va_list ap;
     die(fmt, ap);
 }
@@ -31,27 +32,27 @@ void usage()
     die("usage: %s\n", argv0);
 }
 
-char* concat(int count, ...)
+char* str_concat(int count, ...)
 {
     va_list ap;
-    int newlen = 1;
+    int new_len = 1;
 
     /* Total length of all strings */
     va_start(ap, count);
     for (int i = 0; i < count; i++)
-        newlen += strlen(va_arg(ap, char*));
+        new_len += strlen(va_arg(ap, char*));
     va_end(ap);
 
-    char *newstr = calloc(newlen, sizeof(char));
-    if (newstr == NULL) edie("calloc: ");
+    char *new_str = calloc(new_len, sizeof(char));
+    if (new_str == NULL) edie("calloc: ");
 
     /* Concat strings into newstr */
     va_start(ap, count);
     for (int i = 0; i < count; i++) {
         char* s = va_arg(ap, char*);
-        strcat(newstr, s);
+        strcat(new_str, s);
     }
     va_end(ap);
 
-    return newstr;
+    return new_str;
 }

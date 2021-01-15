@@ -5,4 +5,4 @@ void die(const char* fmt, ...);
 void edie(const char* fmt, ...);
 void usage();
 
-char* concat(int count, ...);
+char* str_concat(int count, ...);

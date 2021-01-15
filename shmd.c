@@ -1,6 +1,7 @@
-#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "util.h"
 
 const char* argv0;
 
@@ -13,17 +14,17 @@ char* execute_command(const char* command) {
     if (result == NULL) edie("calloc: ");
     result[0] = '\0';
 
-    size_t bufsize = 81;
-    char* buf = calloc(bufsize, sizeof(char));
+    size_t buf_size = 81;
+    char* buf = calloc(buf_size, sizeof(char));
     if (buf == NULL) edie("calloc: ");
 
     /*
-     * concat allocates a new string on the heap, so free the old memory when we
-     * concat the next line of output.
+     * str_concat allocates a new string on the heap, so free the old memory
+     * when we concat the next line of output.
      */
-    while (fgets(buf, bufsize, fp) != NULL) {
+    while (fgets(buf, buf_size, fp) != NULL) {
         char* tmp = result;
-        result = concat(2, result, buf);
+        result = str_concat(2, result, buf);
         free(tmp);
     }
     free(buf);
