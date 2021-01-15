@@ -1,0 +1,8 @@
+# A$(whoami)$(whoami)A
+w $(whoami) $(whoami)i
+$( whoami)$(whoami )$(whoami   )
+
+$(echo 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+
+(this) $ (shouldn't) $be) $)affected
+
