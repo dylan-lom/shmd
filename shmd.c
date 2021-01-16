@@ -11,13 +11,11 @@ char* command_execute(const char* command) {
     pp = popen(command, "r");
     if (pp == NULL) edie("popen: ");
 
-    char* result = calloc(1, sizeof(char));
-    if (result == NULL) edie("calloc: ");
+    char* result = str_ealloc(1);
     result[0] = '\0';
 
     size_t buf_size = 81;
-    char* buf = calloc(buf_size, sizeof(char));
-    if (buf == NULL) edie("calloc: ");
+    char* buf = str_ealloc(buf_size);
 
     /*
      * str_concat allocates a new string on the heap, so free the old memory
@@ -38,8 +36,7 @@ char* command_execute(const char* command) {
 char* command_substitute(FILE* fp) {
     size_t command_size = 100;
     size_t command_i = 0;
-    char* command = calloc(command_size, sizeof(char));
-    if (command == NULL) edie("calloc: ");
+    char* command = str_ealloc(command_size);
     memset(command, '\0', command_size);
 
     int sub_parens = 0; /* track nested parans inside of command */

@@ -32,6 +32,13 @@ void usage()
     die("usage: %s\n", argv0);
 }
 
+void* ecalloc(size_t nmemb, size_t size)
+{
+    void* ptr = calloc(nmemb, size);
+    if (ptr == NULL) edie("calloc: ");
+    return ptr;
+}
+
 char* str_concat(int count, ...)
 {
     va_list ap;
