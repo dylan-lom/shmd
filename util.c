@@ -39,11 +39,11 @@ void* ecalloc(size_t nmemb, size_t size)
     return ptr;
 }
 
-size_t str_pushc(char* s, char c, size_t s_size) {
+size_t str_pushc(char* s, char c, size_t s_size, size_t realloc_amount) {
     /* Realloc s if needed */
     int s_len = strlen(s);
     if (s_len + 1 > s_size) {
-        s_size++;
+        s_size += realloc_amount;
         s = realloc(s, s_size);
         if (s == NULL) edie("realloc: ");
     }
