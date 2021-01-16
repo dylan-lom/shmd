@@ -117,3 +117,8 @@ struct str_list str_list_new(int count, ...)
     return l;
 }
 
+void str_list_free(struct str_list* l) {
+    for (int i = 0; i < l->size; i++) {
+        free(l->values[i]);
+    }
+}

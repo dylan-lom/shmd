@@ -2,7 +2,6 @@
 
 /*
  * TODO: It's probably considered bad practice to define macros in lower-case...
- * TODO: str_list_free
  */
 
 #define SHIFT_ARGS() argv++; argc--
@@ -27,5 +26,6 @@ struct str_list {
 
 struct str_list* str_list_add(struct str_list* l, char* s);
 struct str_list  str_list_new(int count, ...);
+void             str_list_free(struct str_list* l);
 #define str_list_init() str_list_new(0)
 
