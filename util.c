@@ -90,6 +90,14 @@ char* str_concat(int count, ...)
     return new_str;
 }
 
+struct str_list* str_list_add(struct str_list* l, char* s) {
+    l->size++;
+    l->values = realloc(l->values, l->size);
+    if (l->values == NULL) edie("realloc: ");
+    l->values[l->size-1] = s;
+    return l;
+}
+
 struct str_list str_list_new(int count, ...)
 {
     /* At least one str is required */
@@ -109,10 +117,3 @@ struct str_list str_list_new(int count, ...)
     return l;
 }
 
-struct str_list* str_list_add(struct str_list* l, char* s) {
-    l->size++;
-    l->values = realloc(l->values, l->size);
-    if (l->values == NULL) edie("realloc: ");
-    l->values[l->size-1] = s;
-    return l;
-}

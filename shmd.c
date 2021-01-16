@@ -21,15 +21,47 @@ struct str_list header_split(char* s) {
             continue;
         }
         else if (*s == '\\' && !in_escape) { in_escape = 1; continue; }
-        else if (*s == '"' && !in_escape) in_dquote ^= 1;
-        else if (*s == '\'' && !in_escape) in_squote ^= 1;
+        else if (*s == '"' && !in_escape) { in_dquote ^= 1; continue; }
+        else if (*s == '\'' && !in_escape) { in_squote ^= 1; continue; }
 
         word_size = str_pushc(word, *s, word_size, 100);
         /* It's just simpler to reset this after every iteration */
         in_escape = 0;
     }
 
+    if (strlen(word) > 0) str_list_add(&l, word);
     return l;
+}
+
+char* header_list_to_html(struct str_list l) {
+    if (l.size < 1) return "";
+    char** vals = l.values;
+    /* work out the total length of all strings */
+    size_t vals_size = 0;
+    for (int i = 0; i < l.size; i++)
+        vals_size += strlen(vals[i]);
+
+    char* html;
+    /*
+     * TODO: This is gross... I did it like this to make the if ... else
+     * statement readable... need a better abstraction though
+     */
+    #define HTML_SPRINTF(l_min, fmt, ...) if (l.size < l_min) return ""; \
+        html = str_ealloc(sizeof(fmt) + vals_size + 1); \
+        sprintf(html, fmt, __VA_ARGS__)
+
+    /* Known HEAD tags */
+    if (strcmp(vals[0], "charset") == 0) {
+        HTML_SPRINTF(2, "<meta charset=\"%s\">", vals[1]);
+    } else if (strcmp(vals[0], "title") == 0) {
+        HTML_SPRINTF(2, "<title>%s</title>", vals[1]);
+    } else if (strcmp(vals[0], "link") == 0) {
+        HTML_SPRINTF(3, "<link rel=\"%s\" vals=\"%s\">", vals[1], vals[2]);
+    } else {
+        HTML_SPRINTF(2, "<meta name=\"%s\" content=\"%s\">", vals[0], vals[1]);
+    }
+
+    return html;
 }
 
 char* command_execute(const char* command) {
@@ -111,6 +143,8 @@ int process_input(FILE* fp) {
 
 int main(int argc, char* argv[]) {
     SET_ARGV0();
-    struct str_list l = header_split("title \"Hello World\" wowo");
+    // struct str_list l = header_split("title \"Hello World\" wowo");
+    struct str_list l = header_split("author \"Dylan Lom\"");
+    puts(header_list_to_html(l));
     return process_input(stdin);
 }

@@ -25,7 +25,7 @@ struct str_list {
     char** values;
 };
 
-struct str_list  str_list_new(int count, ...);
 struct str_list* str_list_add(struct str_list* l, char* s);
+struct str_list  str_list_new(int count, ...);
 #define str_list_init() str_list_new(0)
 
