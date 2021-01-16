@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,6 +6,10 @@
 #include "util.h"
 
 const char* argv0;
+
+int header_isend(char* s) {
+    return (strlen(s) >= 2 && s[0] == '*' && s[1] == '/');
+}
 
 struct str_list header_split(char* s) {
     struct str_list l = str_list_init();
@@ -62,6 +67,41 @@ char* header_list_to_html(struct str_list l) {
     }
 
     return html;
+}
+
+char* header_substitute(FILE* fp) {
+    char* result = str_concat(1, "<head>");
+
+    size_t line_size = 250;
+    char* line = str_ealloc(line_size);
+    char* lp;
+    char* tmp;
+    while (fgets(line, line_size, fp) != NULL) {
+        str_trimr(line, '\n', 1);
+        lp = line;
+        /*
+         * Non-alphabetical characters (e.g. whitespace, '*') in the header are
+         * ignored, advance lp to the start of input, while also making sure we
+         * don't reach the end of the line ('\0') or the end of the header
+         * section ('* /' without the space).
+         */
+        while (!isalpha(*lp) && *lp != '\0' && !header_isend(lp)) { lp++; }
+        if (header_isend(lp)) break;
+        if (*lp == '\0') continue;
+
+        struct str_list list = header_split(lp);
+        char* line_html = header_list_to_html(list);
+        str_list_free(&list);
+
+        /* concat html to result */
+        tmp = result;
+        result = str_concat(3, result, "\n\t", line_html);
+        free(tmp);
+    }
+    tmp = result;
+    result = str_concat(3, result, "\n", "</head>");
+    free(tmp);
+    return result;
 }
 
 char* command_execute(const char* command) {
@@ -122,8 +162,15 @@ int process_input(FILE* fp) {
     char b, c;
 
     b = fgetc(fp);
-    while (b != EOF) {
+    c = fgetc(fp);
+
+    if (b == '/' && c == '*') {
+        puts(header_substitute(fp));
+        b = fgetc(fp);
         c = fgetc(fp);
+    }
+
+    while (b != EOF) {
         if (b == '$' && c == '(') {
             printf("%s", command_substitute(fp));
             /*
@@ -136,6 +183,7 @@ int process_input(FILE* fp) {
             putchar(b);
             b = c;
         }
+        c = fgetc(fp);
     }
 
     return EXIT_SUCCESS;
@@ -143,8 +191,5 @@ int process_input(FILE* fp) {
 
 int main(int argc, char* argv[]) {
     SET_ARGV0();
-    // struct str_list l = header_split("title \"Hello World\" wowo");
-    struct str_list l = header_split("author \"Dylan Lom\"");
-    puts(header_list_to_html(l));
     return process_input(stdin);
 }
