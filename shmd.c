@@ -6,6 +6,32 @@
 
 const char* argv0;
 
+struct str_list header_split(char* s) {
+    struct str_list l = str_list_init();
+    size_t word_size = 100;
+    char* word = str_ealloc(word_size);
+
+    /* Keep track of whether we're inside of a quoted or escaped string */
+    int in_dquote = 0, in_squote = 0, in_escape = 0;
+
+    for ( ; *s != '\0'; s++) {
+        if (*s == ' ' && !in_squote && !in_dquote) {
+            str_list_add(&l, word);
+            word = str_ealloc(word_size); /* Allocate memory for next word */
+            continue;
+        }
+        else if (*s == '\\' && !in_escape) { in_escape = 1; continue; }
+        else if (*s == '"' && !in_escape) in_dquote ^= 1;
+        else if (*s == '\'' && !in_escape) in_squote ^= 1;
+
+        word_size = str_pushc(word, *s, word_size, 100);
+        /* It's just simpler to reset this after every iteration */
+        in_escape = 0;
+    }
+
+    return l;
+}
+
 char* command_execute(const char* command) {
     FILE *pp;
     pp = popen(command, "r");
@@ -29,7 +55,7 @@ char* command_execute(const char* command) {
     free(buf);
     pclose(pp);
 
-    result = str_trimr(result, '\n', 1);
+    str_trimr(result, '\n', 1);
     return result;
 }
 
@@ -85,5 +111,6 @@ int process_input(FILE* fp) {
 
 int main(int argc, char* argv[]) {
     SET_ARGV0();
+    struct str_list l = header_split("title \"Hello World\" wowo");
     return process_input(stdin);
 }
