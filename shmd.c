@@ -7,9 +7,9 @@
 const char* argv0;
 
 char* command_execute(const char* command) {
-    FILE *fp;
-    fp = popen(command, "r");
-    if (fp == NULL) edie("popen: ");
+    FILE *pp;
+    pp = popen(command, "r");
+    if (pp == NULL) edie("popen: ");
 
     char* result = calloc(1, sizeof(char));
     if (result == NULL) edie("calloc: ");
@@ -23,13 +23,13 @@ char* command_execute(const char* command) {
      * str_concat allocates a new string on the heap, so free the old memory
      * when we concat the next line of output.
      */
-    while (fgets(buf, buf_size, fp) != NULL) {
+    while (fgets(buf, buf_size, pp) != NULL) {
         char* tmp = result;
         result = str_concat(2, result, buf);
         free(tmp);
     }
     free(buf);
-    pclose(fp);
+    pclose(pp);
 
     result = str_trimr(result, '\n', 1);
     return result;
