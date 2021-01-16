@@ -74,3 +74,30 @@ char* str_trimr(char* s, char c, int max_num)
     }
     return s;
 }
+
+struct str_list str_list_new(int count, ...)
+{
+    /* At least one str is required */
+    if (count < 1) return (struct str_list) { .size = 0, .values = NULL };
+
+    va_list ap;
+    va_start(ap, count);
+    struct str_list l = {
+        .size = count,
+        .values = ecalloc(count, sizeof(char*))
+    };
+    for (int i = 0; i < l.size; i++) {
+        l.values[i] = va_arg(ap, char*);
+    }
+    va_end(ap);
+
+    return l;
+}
+
+struct str_list* str_list_add(struct str_list* l, char* s) {
+    l->size++;
+    l->values = realloc(l->values, l->size);
+    if (l->values == NULL) edie("realloc: ");
+    l->values[l->size-1] = s;
+    return l;
+}
