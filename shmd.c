@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util.h"
+#include "shmd.h"
 
 const char* argv0;
 
