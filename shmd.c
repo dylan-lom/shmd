@@ -12,9 +12,9 @@ int header_isend(char* s) {
 }
 
 struct str_list header_split(char* s) {
-    struct str_list l = str_list_init();
+    struct str_list l = STR_LIST_INIT();
     size_t word_size = 100;
-    char* word = str_ealloc(word_size);
+    char* word = STR_EALLOC(word_size);
 
     /* Keep track of whether we're inside of a quoted or escaped string */
     int in_dquote = 0, in_squote = 0, in_escape = 0;
@@ -22,7 +22,7 @@ struct str_list header_split(char* s) {
     for ( ; *s != '\0'; s++) {
         if (*s == ' ' && !in_squote && !in_dquote) {
             str_list_add(&l, word);
-            word = str_ealloc(word_size); /* Allocate memory for next word */
+            word = STR_EALLOC(word_size); /* Allocate memory for next word */
             continue;
         }
         else if (*s == '\\' && !in_escape) { in_escape = 1; continue; }
@@ -52,9 +52,8 @@ char* header_list_to_html(struct str_list l) {
      * statement readable... need a better abstraction though
      */
     #define HTML_SPRINTF(l_min, fmt, ...) if (l.size < l_min) return ""; \
-        html = str_ealloc(sizeof(fmt) + vals_size + 1); \
+        html = STR_EALLOC(sizeof(fmt) + vals_size + 1); \
         sprintf(html, fmt, __VA_ARGS__)
-
     /* Known HEAD tags */
     if (strcmp(vals[0], "charset") == 0) {
         HTML_SPRINTF(2, "<meta charset=\"%s\">", vals[1]);
@@ -65,6 +64,7 @@ char* header_list_to_html(struct str_list l) {
     } else {
         HTML_SPRINTF(2, "<meta name=\"%s\" content=\"%s\">", vals[0], vals[1]);
     }
+    #undef HTML_SPRINTF
 
     return html;
 }
@@ -73,7 +73,7 @@ char* header_substitute(FILE* fp) {
     char* result = str_concat(1, "<head>");
 
     size_t line_size = 250;
-    char* line = str_ealloc(line_size);
+    char* line = STR_EALLOC(line_size);
     char* lp;
     char* tmp;
     while (fgets(line, line_size, fp) != NULL) {
@@ -109,11 +109,11 @@ char* command_execute(const char* command) {
     pp = popen(command, "r");
     if (pp == NULL) edie("popen: ");
 
-    char* result = str_ealloc(1);
+    char* result = STR_EALLOC(1);
     result[0] = '\0';
 
     size_t buf_size = 81;
-    char* buf = str_ealloc(buf_size);
+    char* buf = STR_EALLOC(buf_size);
 
     /*
      * str_concat allocates a new string on the heap, so free the old memory
@@ -134,7 +134,7 @@ char* command_execute(const char* command) {
 char* command_substitute(FILE* fp) {
     size_t command_size = 100;
     size_t command_i = 0;
-    char* command = str_ealloc(command_size);
+    char* command = STR_EALLOC(command_size);
     memset(command, '\0', command_size);
 
     int sub_parens = 0; /* track nested parans inside of command */
