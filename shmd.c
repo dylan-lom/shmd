@@ -7,10 +7,6 @@
 
 const char* argv0;
 
-int header_isend(char* s) {
-    return (strlen(s) >= 2 && s[0] == '*' && s[1] == '/');
-}
-
 struct str_list header_split(char* s) {
     struct str_list l = STR_LIST_INIT();
     size_t word_size = 100;
@@ -51,9 +47,9 @@ char* header_list_to_html(struct str_list l) {
      * TODO: This is gross... I did it like this to make the if ... else
      * statement readable... need a better abstraction though
      */
-    #define HTML_SPRINTF(l_min, fmt, ...) if (l.size < l_min) return ""; \
-        html = STR_EALLOC(sizeof(fmt) + vals_size + 1); \
-        sprintf(html, fmt, __VA_ARGS__)
+#define HTML_SPRINTF(l_min, fmt, ...) if (l.size < l_min) return ""; \
+    html = STR_EALLOC(sizeof(fmt) + vals_size + 1); \
+    sprintf(html, fmt, __VA_ARGS__)
     /* Known HEAD tags */
     if (strcmp(vals[0], "charset") == 0) {
         HTML_SPRINTF(2, "<meta charset=\"%s\">", vals[1]);
@@ -64,12 +60,13 @@ char* header_list_to_html(struct str_list l) {
     } else {
         HTML_SPRINTF(2, "<meta name=\"%s\" content=\"%s\">", vals[0], vals[1]);
     }
-    #undef HTML_SPRINTF
+#undef HTML_SPRINTF
 
     return html;
 }
 
 char* header_substitute(FILE* fp) {
+#define HEADER_ISEND(s) (strlen(s) >= 2 && s[0] == '*' && s[1] == '/')
     char* result = str_concat(1, "<head>");
 
     size_t line_size = 250;
@@ -85,8 +82,8 @@ char* header_substitute(FILE* fp) {
          * don't reach the end of the line ('\0') or the end of the header
          * section ('* /' without the space).
          */
-        while (!isalpha(*lp) && *lp != '\0' && !header_isend(lp)) { lp++; }
-        if (header_isend(lp)) break;
+        while (!isalpha(*lp) && *lp != '\0' && !HEADER_ISEND(lp)) { lp++; }
+        if (HEADER_ISEND(lp)) break;
         if (*lp == '\0') continue;
 
         struct str_list list = header_split(lp);
@@ -102,6 +99,7 @@ char* header_substitute(FILE* fp) {
     result = str_concat(3, result, "\n", "</head>");
     free(tmp);
     return result;
+#undef HEADER_ISEND
 }
 
 char* command_execute(const char* command) {
