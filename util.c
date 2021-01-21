@@ -32,6 +32,39 @@ void usage()
     die("usage: %s\n", argv0);
 }
 
+void* ecalloc(size_t nmemb, size_t size)
+{
+    void* ptr = calloc(nmemb, size);
+    if (ptr == NULL) edie("calloc: ");
+    return ptr;
+}
+
+size_t str_pushc(char* s, char c, size_t s_size, size_t realloc_amount) {
+    /* Realloc s if needed */
+    int s_len = strlen(s);
+    if (s_len + 1 > s_size) {
+        s_size += realloc_amount;
+        s = realloc(s, s_size);
+        if (s == NULL) edie("realloc: ");
+    }
+
+    s[s_len] = c;
+    s[s_len + 1] = '\0';
+    return s_size;
+}
+
+int str_trimr(char* s, char c, int max_num)
+{
+    int removed = 0;
+    int i = strlen(s)-1;
+    while (s[i] == c && removed <= max_num) {
+        s[i] = '\0';
+        i--;
+        removed++;
+    }
+    return removed;
+}
+
 char* str_concat(int count, ...)
 {
     va_list ap;
@@ -57,13 +90,35 @@ char* str_concat(int count, ...)
     return new_str;
 }
 
-char* str_trimr(char* s, char c, int max_num)
+struct str_list* str_list_add(struct str_list* l, char* s) {
+    l->size++;
+    l->values = realloc(l->values, l->size);
+    if (l->values == NULL) edie("realloc: ");
+    l->values[l->size-1] = s;
+    return l;
+}
+
+struct str_list str_list_new(int count, ...)
 {
-    int i = strlen(s)-1;
-    while (s[i] == c && max_num > 0) {
-        s[i] = '\0';
-        i--;
-        max_num--;
+    /* At least one str is required */
+    if (count < 1) return (struct str_list) { .size = 0, .values = NULL };
+
+    va_list ap;
+    va_start(ap, count);
+    struct str_list l = {
+        .size = count,
+        .values = ecalloc(count, sizeof(char*))
+    };
+    for (int i = 0; i < l.size; i++) {
+        l.values[i] = va_arg(ap, char*);
     }
-    return s;
+    va_end(ap);
+
+    return l;
+}
+
+void str_list_free(struct str_list* l) {
+    for (int i = 0; i < l->size; i++) {
+        free(l->values[i]);
+    }
 }

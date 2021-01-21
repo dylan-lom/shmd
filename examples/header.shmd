@@ -1,0 +1,9 @@
+/*
+ * title "My Markdown Article"
+ * author "Dylan Lom"
+ * charset "utf8"
+ */
+
+## Body Here
+
+Built: $(date)
