@@ -66,6 +66,11 @@ char* header_list_process(struct str_list l) {
         HTML_SPRINTF(2, "<meta name=\"%s\" content=\"%s\">", vals[0], vals[1]);
     }
 
+    /* Add to sh_prefix so that values are available in the shell environment */
+    char* tmp = sh_prefix;
+    sh_prefix = str_concat(5, sh_prefix, l.values[0], "=\"", l.values[l.size-1], "\"; ");
+    free(tmp);
+
     return html;
 }
 #undef HTML_SPRINTF
@@ -109,7 +114,7 @@ char* header_substitute(FILE* fp) {
 
 char* command_execute(const char* command) {
     FILE *pp;
-    pp = popen(command, "r");
+    pp = popen(str_concat(2, sh_prefix, command), "r");
     if (pp == NULL) edie("popen: ");
 
     char* result = STR_EALLOC(1);
