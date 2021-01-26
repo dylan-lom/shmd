@@ -68,7 +68,14 @@ char* header_list_process(struct str_list l) {
 
     /* Add to sh_prefix so that values are available in the shell environment */
     char* tmp = sh_prefix;
-    sh_prefix = str_concat(5, sh_prefix, l.values[0], "=\"", l.values[l.size-1], "\"; ");
+    size_t val0_length = strlen(vals[0]) - 1;
+    if (vals[0][val0_length-1] == '(' && vals[0][val0_length] == ')') {
+        /* Function */
+        sh_prefix = str_concat(5, sh_prefix, vals[0], " { ", vals[l.size-1], "; }; ");
+    } else {
+        /* Variable */
+        sh_prefix = str_concat(5, sh_prefix, vals[0], "=\"", vals[l.size-1], "\"; ");
+    }
     free(tmp);
 
     return html;
@@ -114,7 +121,8 @@ char* header_substitute(FILE* fp) {
 
 char* command_execute(const char* command) {
     FILE *pp;
-    pp = popen(str_concat(2, sh_prefix, command), "r");
+    char* c = str_concat(2, sh_prefix, command);
+    pp = popen(c, "r");
     if (pp == NULL) edie("popen: ");
 
     char* result = STR_EALLOC(1);

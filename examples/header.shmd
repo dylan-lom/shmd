@@ -1,12 +1,15 @@
 /*
- * title "My Markdown Article"
- * author "Dylan Lom"
+ * title 'My Markdown Article'
+ * author 'Dylan Lom'
  * charset utf8
  * link stylesheet /main.css
+ * sh_node() 'echo \"console.log($1)\" | node'
  */
 
 # $(echo $title)
 
 ## Body Here
+
+Date according to node: `$(sh_node "new Date().toISOString()")`
 
 Built: $(date)
