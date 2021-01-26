@@ -7,7 +7,7 @@
 const char* argv0;
 
 struct str_list header_split        (char* s);
-char*           header_list_to_html (struct str_list l);
+char*           header_list_process (struct str_list l);
 char*           header_substitute   (FILE* fp);
 
 /**

@@ -6,6 +6,11 @@
 #include "shmd.h"
 
 const char* argv0;
+/*
+ * Not a great name, but this is used for variables that we want avaiable to the
+ * shell when we start, ie. the header stuff.
+ */
+char* sh_prefix;
 
 struct str_list header_split(char* s) {
     struct str_list l = STR_LIST_INIT();
@@ -34,7 +39,10 @@ struct str_list header_split(char* s) {
     return l;
 }
 
-char* header_list_to_html(struct str_list l) {
+#define HTML_SPRINTF(l_min, fmt, ...) if (l.size < l_min) return ""; \
+    html = STR_EALLOC(sizeof(fmt) + vals_size + 1); \
+    sprintf(html, fmt, __VA_ARGS__)
+char* header_list_process(struct str_list l) {
     if (l.size < 1) return "";
     char** vals = l.values;
     /* work out the total length of all strings */
@@ -47,9 +55,6 @@ char* header_list_to_html(struct str_list l) {
      * TODO: This is gross... I did it like this to make the if ... else
      * statement readable... need a better abstraction though
      */
-#define HTML_SPRINTF(l_min, fmt, ...) if (l.size < l_min) return ""; \
-    html = STR_EALLOC(sizeof(fmt) + vals_size + 1); \
-    sprintf(html, fmt, __VA_ARGS__)
     /* Known HEAD tags */
     if (strcmp(vals[0], "charset") == 0) {
         HTML_SPRINTF(2, "<meta charset=\"%s\">", vals[1]);
@@ -60,13 +65,13 @@ char* header_list_to_html(struct str_list l) {
     } else {
         HTML_SPRINTF(2, "<meta name=\"%s\" content=\"%s\">", vals[0], vals[1]);
     }
-#undef HTML_SPRINTF
 
     return html;
 }
+#undef HTML_SPRINTF
 
-char* header_substitute(FILE* fp) {
 #define HEADER_ISEND(s) (strlen(s) >= 2 && s[0] == '*' && s[1] == '/')
+char* header_substitute(FILE* fp) {
     char* result = str_concat(1, "<head>");
 
     size_t line_size = 250;
@@ -87,7 +92,7 @@ char* header_substitute(FILE* fp) {
         if (*lp == '\0') continue;
 
         struct str_list list = header_split(lp);
-        char* line_html = header_list_to_html(list);
+        char* line_html = header_list_process(list);
         str_list_free(&list);
 
         /* concat html to result */
@@ -99,8 +104,8 @@ char* header_substitute(FILE* fp) {
     result = str_concat(3, result, "\n", "</head>");
     free(tmp);
     return result;
-#undef HEADER_ISEND
 }
+#undef HEADER_ISEND
 
 char* command_execute(const char* command) {
     FILE *pp;
@@ -189,5 +194,6 @@ int process_input(FILE* fp) {
 
 int main(int argc, char* argv[]) {
     SET_ARGV0();
+    sh_prefix = STR_EALLOC(100);
     return process_input(stdin);
 }

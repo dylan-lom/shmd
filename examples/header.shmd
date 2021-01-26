@@ -1,8 +1,11 @@
 /*
  * title "My Markdown Article"
  * author "Dylan Lom"
- * charset "utf8"
+ * charset utf8
+ * link stylesheet /main.css
  */
+
+# $(echo $title)
 
 ## Body Here
 
