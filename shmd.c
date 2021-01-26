@@ -27,8 +27,8 @@ struct str_list header_split(char* s) {
             continue;
         }
         else if (*s == '\\' && !in_escape) { in_escape = 1; continue; }
-        else if (*s == '"' && !in_escape) { in_dquote ^= 1; continue; }
-        else if (*s == '\'' && !in_escape) { in_squote ^= 1; continue; }
+        else if (*s == '"' && !in_escape && !in_squote) { in_dquote ^= 1; continue; }
+        else if (*s == '\'' && !in_escape && !in_dquote) { in_squote ^= 1; continue; }
 
         word_size = str_pushc(word, *s, word_size, 100);
         /* It's just simpler to reset this after every iteration */

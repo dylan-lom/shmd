@@ -3,7 +3,7 @@
  * author 'Dylan Lom'
  * charset utf8
  * link stylesheet /main.css
- * sh_node() 'echo \"console.log($1)\" | node'
+ * sh_node() 'echo "console.log($1)" | node'
  */
 
 # $(echo $title)
