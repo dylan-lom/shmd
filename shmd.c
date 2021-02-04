@@ -61,7 +61,7 @@ char* header_list_process(struct str_list l) {
     } else if (strcmp(vals[0], "title") == 0) {
         HTML_SPRINTF(2, "<title>%s</title>", vals[1]);
     } else if (strcmp(vals[0], "link") == 0) {
-        HTML_SPRINTF(3, "<link rel=\"%s\" vals=\"%s\">", vals[1], vals[2]);
+        HTML_SPRINTF(3, "<link rel=\"%s\" href=\"%s\">", vals[1], vals[2]);
     } else {
         HTML_SPRINTF(2, "<meta name=\"%s\" content=\"%s\">", vals[0], vals[1]);
     }
