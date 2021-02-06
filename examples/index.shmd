@@ -1,0 +1,12 @@
+# Index
+
+Files in examples/
+
+$(
+    for f in examples/*; do
+        echo "* [$(basename $f)]($f)"
+    done;
+)
+
+Pretty cool :)
+

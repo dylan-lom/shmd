@@ -2,109 +2,188 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "shmd.h"
 
-const char* argv0;
+const char *argv0;
+char *sh_prefix;
 
-struct str_list header_split(char* s) {
-    struct str_list l = STR_LIST_INIT();
-    size_t word_size = 100;
-    char* word = STR_EALLOC(word_size);
+char *header_process_extract_field(FILE *fp)
+{
+    char c;
+    size_t dest_size = 100;
+    char *dest = STR_EALLOC(dest_size);
 
-    /* Keep track of whether we're inside of a quoted or escaped string */
-    int in_dquote = 0, in_squote = 0, in_escape = 0;
-
-    for ( ; *s != '\0'; s++) {
-        if (*s == ' ' && !in_squote && !in_dquote) {
-            str_list_add(&l, word);
-            word = STR_EALLOC(word_size); /* Allocate memory for next word */
-            continue;
+    bool is_escaped = false,
+         is_dquoted = false,
+         is_squoted = false;
+    while (
+        (c = fgetc(fp)) != '\0' && !(
+            !is_dquoted
+            && !is_squoted
+            && !is_escaped
+            && (c == ' ' || c == '\n')
+        )
+    ) {
+        if (!is_escaped) {
+            if (c == '"' && !is_squoted) {
+                is_dquoted = !is_dquoted;
+                continue;
+            } else if (c == '\'' && !is_dquoted) {
+                is_squoted = !is_squoted;
+                continue;
+            } else if (c == '\\') {
+                is_escaped = true;
+                continue;
+            }
         }
-        else if (*s == '\\' && !in_escape) { in_escape = 1; continue; }
-        else if (*s == '"' && !in_escape) { in_dquote ^= 1; continue; }
-        else if (*s == '\'' && !in_escape) { in_squote ^= 1; continue; }
-
-        word_size = str_pushc(word, *s, word_size, 100);
-        /* It's just simpler to reset this after every iteration */
-        in_escape = 0;
+        dest_size = str_pushc(dest, c, dest_size, 50);
     }
-
-    if (strlen(word) > 0) str_list_add(&l, word);
-    return l;
+    return dest;
 }
 
-char* header_list_to_html(struct str_list l) {
-    if (l.size < 1) return "";
-    char** vals = l.values;
-    /* work out the total length of all strings */
-    size_t vals_size = 0;
-    for (int i = 0; i < l.size; i++)
-        vals_size += strlen(vals[i]);
+size_t header_field_count(enum header_field_type type)
+{
+    size_t count = 0;
+    switch (type) {
+    case E_HEADER_FIELD_CHARSET:
+        count = 1;
+        break;
+    case E_HEADER_FIELD_TITLE:
+        count = 1;
+        break;
+    case E_HEADER_FIELD_LINK:
+        count = 2;
+        break;
+    case E_HEADER_FIELD_META:
+        count = 1;
+        break;
+    }
+    return count;
+}
 
-    char* html;
-    /*
-     * TODO: This is gross... I did it like this to make the if ... else
-     * statement readable... need a better abstraction though
-     */
-#define HTML_SPRINTF(l_min, fmt, ...) if (l.size < l_min) return ""; \
-    html = STR_EALLOC(sizeof(fmt) + vals_size + 1); \
-    sprintf(html, fmt, __VA_ARGS__)
-    /* Known HEAD tags */
-    if (strcmp(vals[0], "charset") == 0) {
-        HTML_SPRINTF(2, "<meta charset=\"%s\">", vals[1]);
-    } else if (strcmp(vals[0], "title") == 0) {
-        HTML_SPRINTF(2, "<title>%s</title>", vals[1]);
-    } else if (strcmp(vals[0], "link") == 0) {
-        HTML_SPRINTF(3, "<link rel=\"%s\" href=\"%s\">", vals[1], vals[2]);
+char **header_process_fields(FILE *fp, enum header_field_type type)
+{
+    size_t values_count = header_field_count(type);
+    char **values = ecalloc(values_count, sizeof(char*));
+
+    for (int i = 0; i < values_count; i++) {
+        values[i] = header_process_extract_field(fp);
+    }
+
+    return values;
+}
+
+char *header_to_html(enum header_field_type type, char *name, char **values)
+{
+    char *result;
+    switch (type) {
+    case E_HEADER_FIELD_CHARSET:
+        result = str_concat(3, "<meta charset=\"", values[0], "\">");
+        break;
+    case E_HEADER_FIELD_TITLE:
+        result = str_concat(3, "<title>", values[0], "</title>");
+        break;
+    case E_HEADER_FIELD_LINK:
+        result = str_concat(
+            5, "<link rel=\"", values[0], "\" href=\"", values[1], "\">"
+        );
+        break;
+    case E_HEADER_FIELD_META:
+        result = str_concat(
+            5, "<meta name=\"", name, "\" content=\"", values[0], "\">"
+        );
+        break;
+    }
+    return result;
+}
+
+char *header_to_sh(enum header_field_type type, char *name, char **values)
+{
+    char *result;
+    size_t name_size = strlen(name);
+    // name=(last value)
+    char *value = values[header_field_count(type) - 1];
+    bool is_function = (
+        type == E_HEADER_FIELD_META
+        && name[name_size-2] == '('
+        && name[name_size-1] == ')'
+    );
+
+    if (is_function) {
+        result = str_concat(4, name, " { ", value, "; }; ");
     } else {
-        HTML_SPRINTF(2, "<meta name=\"%s\" content=\"%s\">", vals[0], vals[1]);
+        result = str_concat(4, name, "='", value, "'; ");
     }
-#undef HTML_SPRINTF
-
-    return html;
+    return result;
 }
 
+void header_process(FILE *fp)
+{
+    size_t name_size = 100;
+    char* name = STR_EALLOC(name_size);
+    char c;
+    while ((c = fgetc(fp)) != '\0' && c != ' ') {
+        name_size = str_pushc(name, c, name_size, 100);
+    }
+
+    enum header_field_type type;
+    if (strcmp(name, "charset") == 0)
+        type = E_HEADER_FIELD_CHARSET;
+    else if (strcmp(name, "title") == 0)
+        type = E_HEADER_FIELD_TITLE;
+    else if (strcmp(name, "link") == 0)
+        type = E_HEADER_FIELD_LINK;
+    else
+        type = E_HEADER_FIELD_META;
+
+    char **values = header_process_fields(fp, type);
+
+    char *tmp = sh_prefix;
+    sh_prefix = str_concat(2, sh_prefix, header_to_sh(type, name, values));
+    free(tmp);
+
+    puts(header_to_html(type, name, values));
+}
+
+#define HEADER_ISEND(b, c) (b == '*' && c == '/')
 char* header_substitute(FILE* fp) {
-#define HEADER_ISEND(s) (strlen(s) >= 2 && s[0] == '*' && s[1] == '/')
     char* result = str_concat(1, "<head>");
 
-    size_t line_size = 250;
-    char* line = STR_EALLOC(line_size);
-    char* lp;
-    char* tmp;
-    while (fgets(line, line_size, fp) != NULL) {
-        str_trimr(line, '\n', 1);
-        lp = line;
+    char b = '\0';
+    char c;
+    while ((c = fgetc(fp)) != '\0') {
         /*
          * Non-alphabetical characters (e.g. whitespace, '*') in the header are
          * ignored, advance lp to the start of input, while also making sure we
          * don't reach the end of the line ('\0') or the end of the header
          * section ('* /' without the space).
          */
-        while (!isalpha(*lp) && *lp != '\0' && !HEADER_ISEND(lp)) { lp++; }
-        if (HEADER_ISEND(lp)) break;
-        if (*lp == '\0') continue;
+        while (
+            !isalpha(c)
+            && c != '"'
+            && c != '\''
+            && c != '\0'
+            && !HEADER_ISEND(b, c)
+        ) {
+            b = c;
+            c = fgetc(fp);
+        }
+        if (c == '\0') continue;
+        if (HEADER_ISEND(b, c)) break;
 
-        struct str_list list = header_split(lp);
-        char* line_html = header_list_to_html(list);
-        str_list_free(&list);
-
-        /* concat html to result */
-        tmp = result;
-        result = str_concat(3, result, "\n\t", line_html);
-        free(tmp);
+        ungetc(c, fp);
+        header_process(fp);
     }
-    tmp = result;
-    result = str_concat(3, result, "\n", "</head>");
-    free(tmp);
     return result;
-#undef HEADER_ISEND
 }
+#undef HEADER_ISEND
 
 char* command_execute(const char* command) {
     FILE *pp;
-    pp = popen(command, "r");
+    char* c = str_concat(2, sh_prefix, command);
+    pp = popen(c, "r");
     if (pp == NULL) edie("popen: ");
 
     char* result = STR_EALLOC(1);
@@ -189,5 +268,6 @@ int process_input(FILE* fp) {
 
 int main(int argc, char* argv[]) {
     SET_ARGV0();
+    sh_prefix = STR_EALLOC(1);
     return process_input(stdin);
 }
