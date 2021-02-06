@@ -139,11 +139,10 @@ void header_process(FILE *fp)
         type = E_HEADER_FIELD_META;
 
     char **values = header_process_fields(fp, type);
-    size_t values_count = header_field_count(type);
 
-    char *tmp = str_concat(2, sh_prefix, header_to_sh(type, name, values));
-    free(sh_prefix);
-    sh_prefix = tmp;
+    char *tmp = sh_prefix;
+    sh_prefix = str_concat(2, sh_prefix, header_to_sh(type, name, values));
+    free(tmp);
 
     puts(header_to_html(type, name, values));
 }
