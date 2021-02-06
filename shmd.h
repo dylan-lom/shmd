@@ -30,7 +30,7 @@ char *header_to_html(enum header_field_type type, char *name, char **values);
  */
 char *header_to_sh(enum header_field_type type, char *name, char **values);
 void header_process(FILE *fp);
-char *header_substitute(FILE *fp);
+void header_substitute(FILE *fp);
 
 
 /**

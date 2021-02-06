@@ -148,8 +148,8 @@ void header_process(FILE *fp)
 }
 
 #define HEADER_ISEND(b, c) (b == '*' && c == '/')
-char* header_substitute(FILE* fp) {
-    char* result = str_concat(1, "<head>");
+void header_substitute(FILE* fp) {
+    puts("<head>");
 
     char b = '\0';
     char c;
@@ -176,7 +176,7 @@ char* header_substitute(FILE* fp) {
         ungetc(c, fp);
         header_process(fp);
     }
-    return result;
+    puts("</head>");
 }
 #undef HEADER_ISEND
 
@@ -242,7 +242,7 @@ int process_input(FILE* fp) {
     c = fgetc(fp);
 
     if (b == '/' && c == '*') {
-        puts(header_substitute(fp));
+        header_substitute(fp);
         b = fgetc(fp);
         c = fgetc(fp);
     }
