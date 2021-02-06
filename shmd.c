@@ -75,8 +75,51 @@ char **header_process_fields(FILE *fp, enum header_field_type type)
     return values;
 }
 
-/* Process a header record */
-char *header_process(FILE *fp)
+char *header_to_html(enum header_field_type type, char *name, char **values)
+{
+    char *result;
+    switch (type) {
+    case E_HEADER_FIELD_CHARSET:
+        result = str_concat(3, "<meta charset=\"", values[0], "\">");
+        break;
+    case E_HEADER_FIELD_TITLE:
+        result = str_concat(3, "<title>", values[0], "</title>");
+        break;
+    case E_HEADER_FIELD_LINK:
+        result = str_concat(
+            5, "<link rel=\"", values[0], "\" href=\"", values[1], "\">"
+        );
+        break;
+    case E_HEADER_FIELD_META:
+        result = str_concat(
+            5, "<meta name=\"", name, "\" content=\"", values[0], "\">"
+        );
+        break;
+    }
+    return result;
+}
+
+char *header_to_sh(enum header_field_type type, char *name, char **values)
+{
+    char *result;
+    size_t name_size = strlen(name);
+    // name=(last value)
+    char *value = values[header_field_count(type) - 1];
+    bool is_function = (
+        type == E_HEADER_FIELD_META
+        && name[name_size-2] == '('
+        && name[name_size-1] == ')'
+    );
+
+    if (is_function) {
+        result = str_concat(4, name, " { ", value, "; }; ");
+    } else {
+        result = str_concat(4, name, "='", value, "'; ");
+    }
+    return result;
+}
+
+void header_process(FILE *fp)
 {
     size_t name_size = 100;
     char* name = STR_EALLOC(name_size);
@@ -98,7 +141,11 @@ char *header_process(FILE *fp)
     char **values = header_process_fields(fp, type);
     size_t values_count = header_field_count(type);
 
-    return name;
+    char *tmp = str_concat(2, sh_prefix, header_to_sh(type, name, values));
+    free(sh_prefix);
+    sh_prefix = tmp;
+
+    puts(header_to_html(type, name, values));
 }
 
 #define HEADER_ISEND(b, c) (b == '*' && c == '/')
@@ -222,6 +269,6 @@ int process_input(FILE* fp) {
 
 int main(int argc, char* argv[]) {
     SET_ARGV0();
-    sh_prefix = STR_EALLOC(100);
+    sh_prefix = STR_EALLOC(1);
     return process_input(stdin);
 }

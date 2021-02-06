@@ -6,7 +6,7 @@
  * sh_node() 'echo "console.log($1)" | node'
  */
 
-# $(echo $title)
+# $(echo "$title")
 
 ## Body Here
 

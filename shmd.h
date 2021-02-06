@@ -1,7 +1,5 @@
 #include "util.h"
 
-
-
 /**
  * #argv0
  * value of argv[0] at the start of execution (ie. the program's name).
@@ -22,7 +20,16 @@ char *header_process_extract_field(FILE *fp);
 size_t header_field_count(enum header_field_type type);
 /* Read space-seperated fields from @fp */
 char **header_process_fields(FILE *fp, enum header_field_type type);
-char *header_process(FILE *fp);
+/* Get the html-ized version of a header */
+char *header_to_html(enum header_field_type type, char *name, char **values);
+/*
+ * Get the shell-executable assignment of a header, using the last value as
+ * the value.
+ * In the special case @type is E_HEADER_FIELD_META and @name ends in '()',
+ * will return a posix-style function declaration.
+ */
+char *header_to_sh(enum header_field_type type, char *name, char **values);
+void header_process(FILE *fp);
 char *header_substitute(FILE *fp);
 
 
