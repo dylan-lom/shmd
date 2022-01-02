@@ -1,5 +1,8 @@
 # **SH**ell **M**ark**D**own
 
+**NO LONGER IN DEVELOPMENT** -- this project has been superceeded by [mdpp][3]
+which has (slightly) loftier goals and (hopefully) less terrible code.
+
 SHMD (Shell Markdown) is an *extension* to the popular [Markdown][1] markup
 language
 
@@ -24,3 +27,4 @@ continue to work. Converting a SHMD file to HTML may look something like this
 
 [1]: https://daringfireball.net/projects/markdown/
 [2]: https://www.gnu.org/software/bash/manual/html_node/Command-Substitution.html
+[3]: https://github.com/dylan-lom/mdpp
